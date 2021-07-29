@@ -29,4 +29,8 @@ public class Participate extends BaseEntity {
         this.study = study;
     }
 
+    public static Participate of(User participant, Study study) {
+        return new Participate(participant, study);
+    }
+
 }
