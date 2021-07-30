@@ -10,6 +10,7 @@ import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import static javax.persistence.CascadeType.PERSIST;
 import static javax.persistence.FetchType.LAZY;
 import static lombok.AccessLevel.PROTECTED;
 
@@ -18,11 +19,10 @@ import static lombok.AccessLevel.PROTECTED;
 @Entity
 public class Study extends BaseEntity {
 
-    @Column(nullable = false)
-    @OneToOne(fetch = LAZY)
+    @OneToOne(fetch = LAZY, optional = false)
     private User leader;
 
-    @OneToMany(fetch = LAZY, mappedBy = "study")
+    @OneToMany(fetch = LAZY, mappedBy = "study", cascade = PERSIST, orphanRemoval = true)
     private List<Participate> participants = new ArrayList<>();
 
     @Column(nullable = false)

@@ -1,6 +1,6 @@
 package com.cenibee.project.studygroup.domain.study;
 
-import org.springframework.data.repository.Repository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface StudyRepository extends Repository<Study, Long> {
+public interface StudyRepository extends JpaRepository<Study, Long> {
 }
