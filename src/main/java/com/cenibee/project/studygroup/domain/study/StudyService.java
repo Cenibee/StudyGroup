@@ -41,9 +41,19 @@ public class StudyService {
 
     public void updateBy(User leader, StudyDto.ToUpdate dto) {
         Study study = findById(dto.getStudyId());
+        checkLeader(leader, study);
+        dto.update(study);
+    }
+
+    public void delete(User leader, long studyId) {
+        Study study = findById(studyId);
+        checkLeader(leader, study);
+        studyRepository.delete(study);
+    }
+
+    private void checkLeader(User leader, Study study) {
         if (leader == null || !leader.equals(study.getLeader())) {
             throw new IllegalStateException("스터디 관리 권한이 없습니다.");
         }
-        dto.update(study);
     }
 }

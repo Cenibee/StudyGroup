@@ -166,4 +166,39 @@ class StudyServiceTest extends BaseMockTest {
                 .hasMessage("스터디 관리 권한이 없습니다.");
     }
 
+    @Test
+    @DisplayName("스터디 삭제")
+    void 스터디_삭제() {
+        //given 스터디와 리더가 주어졌을 때
+        User leader = mock(User.class);
+
+        long studyId = 2L;
+        Study toDelete = spy(Study.builder().leader(leader).build());
+        when(toDelete.getId()).thenReturn(studyId);
+        when(studyRepository.findById(studyId)).thenReturn(of(toDelete));
+
+        //when 리더가 스터디를 제거하면
+        studyService.delete(leader, studyId);
+
+        //then 스터디가 제거됨
+        verify(studyRepository).delete(toDelete);
+    }
+
+    @Test
+    @DisplayName("스터디 삭제 - 스터디 리더가 아닌 경우")
+    void 스터디_삭제__스터디_리더가_아닌_경우() {
+        //given 스터디와 리더가 주어졌을 때
+        User user = mock(User.class);
+
+        long studyId = 2L;
+        Study toDelete = spy(Study.builder().leader(mock(User.class)).build());
+        when(toDelete.getId()).thenReturn(studyId);
+        when(studyRepository.findById(studyId)).thenReturn(of(toDelete));
+
+        //expect 리더가 아닌 유저로 스터디를 삭제하면 IllegalStateException 예외가 발생함
+        assertThatThrownBy(() -> studyService.delete(user, studyId))
+                .isExactlyInstanceOf(IllegalStateException.class)
+                .hasMessage("스터디 관리 권한이 없습니다.");
+    }
+
 }
