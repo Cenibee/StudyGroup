@@ -2,6 +2,7 @@ package com.cenibee.project.studygroup.domain.study;
 
 import com.cenibee.project.studygroup.BaseMockTest;
 import com.cenibee.project.studygroup.domain.user.User;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -23,6 +24,11 @@ class StudyServiceTest extends BaseMockTest {
     @InjectMocks StudyService studyService;
 
     @Mock StudyRepository studyRepository;
+
+    @BeforeEach
+    void 서비스_스파이() {
+        studyService = spy(studyService);
+    }
 
     @Test
     @DisplayName("스터디 생성 테스트")
@@ -64,7 +70,8 @@ class StudyServiceTest extends BaseMockTest {
         //when 영속 식별값으로 스터디 리소스를 조회하면
         StudyDto.Resource result = studyService.get(studyId);
 
-        //then 주어진 스터디로 변환된 Resource DTO 가 반환됨
+        //then findById() 를 참조하고 주어진 스터디로 변환한 Resource DTO 가 반환됨
+        verify(studyService).findById(studyId);
         assertThat(result).isEqualTo(StudyDto.Resource.from(study));
     }
 
@@ -143,7 +150,8 @@ class StudyServiceTest extends BaseMockTest {
         //when 리더로 스터디를 업데이트하면
         studyService.updateBy(leader, dto);
 
-        //then DTO 의 업데이트 함수를 콜한다.
+        //then findById() 를 참조하고 DTO 의 업데이트 함수를 콜한다.
+        verify(studyService).findById(studyId);
         verify(dto).update(study);
     }
 
@@ -180,7 +188,8 @@ class StudyServiceTest extends BaseMockTest {
         //when 리더가 스터디를 제거하면
         studyService.delete(leader, studyId);
 
-        //then 스터디가 제거됨
+        //then findById() 를 참조하고 스터디가 제거됨
+        verify(studyService).findById(studyId);
         verify(studyRepository).delete(toDelete);
     }
 
