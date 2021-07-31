@@ -14,6 +14,59 @@ import static org.mockito.Mockito.mock;
 public class StudyTest {
 
     @Test
+    @DisplayName("생성자(+ 빌더) 테스트")
+    void 생성자_테스트() {
+        //given 리더와 스터디 속성들이 설정된 빌더가 주어졌을 때
+        User leader = mock(User.class);
+        int maxParticipant = 3;
+        String description = "desc";
+
+        Study.StudyBuilder builder = Study.builder()
+                .leader(leader)
+                .maxParticipant(maxParticipant)
+                .description(description);
+
+        //when 주어진 빌더를 실행하면
+        Study result = builder.build();
+
+        //then 주어진 리더와 속성이 설정된 스터디가 생성되고, 참가자에 리더가 포함되어있다.
+        assertThat(result.getLeader()).isEqualTo(leader);
+        assertThat(result.getParticipants())
+                .anyMatch(participate -> participate.getParticipant().equals(leader));
+        assertThat(result.getMaxParticipant()).isEqualTo(maxParticipant);
+        assertThat(result.getDescription()).isEqualTo(description);
+    }
+
+    @Test
+    @DisplayName("생성자 테스트 - 리더가 null")
+    void 생성자_테스트__리더가_null() {
+        //given 스터디 빌더의 리더가 null 이면
+        Study.StudyBuilder builder = Study.builder()
+                .maxParticipant(3);
+
+        //when 생성 시 IllegalArgumentException 예외가 발생한다.
+        assertThatThrownBy(builder::build)
+                .isExactlyInstanceOf(IllegalArgumentException.class)
+                .hasMessage("스터디 리더가 null 입니다.");
+    }
+
+    @ParameterizedTest(name = "제한 인원 {0}")
+    @CsvSource({"0", "-1", "-100"})
+    @DisplayName("생성자 테스트 - 제한 인원이 양수가 아님")
+    void 생성자_테스트__리더가_null(int maxParticipant) {
+        //given 스터디 빌더의 제한 인원이 0 이나 음수면
+        User leader = mock(User.class);
+        Study.StudyBuilder builder = Study.builder()
+                .leader(leader)
+                .maxParticipant(maxParticipant);
+
+        //when 생성 시 IllegalArgumentException 예외가 발생한다.
+        assertThatThrownBy(builder::build)
+                .isExactlyInstanceOf(IllegalArgumentException.class)
+                .hasMessage("인원 제한은 양수 값이어야 합니다.");
+    }
+
+    @Test
     @DisplayName("스터디원 인원수 조회 테스트")
     void 스터디원_인원수_조회_테스트() {
         //given 스터디가 주어지고, 그 스터디에 1 명이 더 참가했을 때
@@ -205,7 +258,7 @@ public class StudyTest {
     @DisplayName("유저 참가하기 테스트 - 유저가 null")
     void 유저_참가하기_테스트__유저가_null() {
         //given 스터디가 주어졌을 때
-        Study study = Study.builder().maxParticipant(3).build();
+        Study study = Study.builder().leader(mock(User.class)).maxParticipant(3).build();
 
         //when null 유저가 스터디에 참가하면 IllegalArgumentException 예외가 발생
         assertThatThrownBy(() -> study.join(null))
@@ -234,7 +287,7 @@ public class StudyTest {
     void 유저_탈퇴하기_테스트__리더_탈퇴_불가() {
         //given 스터디와 스터디 리더가 주어졌을 때
         User user = mock(User.class);
-        Study study = Study.builder().leader(user).build();
+        Study study = Study.builder().leader(user).maxParticipant(3).build();
 
         //when 스터디 리더가 스터디를 탈퇴하면
         boolean result = study.remove(user);

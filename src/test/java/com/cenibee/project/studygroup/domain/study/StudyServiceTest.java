@@ -36,7 +36,7 @@ class StudyServiceTest extends BaseMockTest {
         //given 주어진 유저, DTO 로 변환된 엔티티와 해당 엔티티가 저장됐을 때의 식별값이 주어졌을 때
         User user = mock(User.class);
 
-        StudyDto.ToCreate dto = spy(StudyDto.ToCreate.class);
+        StudyDto.ToCreate dto = mock(StudyDto.ToCreate.class);
         Study entityFromDto = mock(Study.class);
         when(dto.toEntityWith(user)).thenReturn(entityFromDto);
 
@@ -55,6 +55,31 @@ class StudyServiceTest extends BaseMockTest {
     }
 
     @Test
+    @DisplayName("스터디 생성 테스트 - 유저가 null")
+    void 스터디_생성_테스트__유저가_null() {
+        //given DTO 가 주어졌을 때
+        StudyDto.ToCreate dto = new StudyDto.ToCreate(3, "desc");
+
+        //expect 유저를 null 로 스터디를 생성하면 IllegalArgumentException 예외가 발생한다.
+        assertThatThrownBy(() -> studyService.createNew(null, dto))
+                .isExactlyInstanceOf(IllegalArgumentException.class)
+                .hasMessage("스터디 리더가 null 입니다.");
+    }
+
+    @Test
+    @DisplayName("스터디 생성 테스트 - 제한 인원 양수 아님")
+    void 스터디_생성_테스트__제한_인원_양수_아님() {
+        //given 스터디 리더와 제한 인원이 음수인 DTO 가 주어졌을 때
+        User user = mock(User.class);
+        StudyDto.ToCreate dto = new StudyDto.ToCreate(-1, "desc");
+
+        //expect 주어진 리더와 DTO 로 스터디를 생성하면 IllegalArgumentException 예외가 발생한다.
+        assertThatThrownBy(() -> studyService.createNew(user, dto))
+                .isExactlyInstanceOf(IllegalArgumentException.class)
+                .hasMessage("인원 제한은 양수 값이어야 합니다.");
+    }
+
+    @Test
     @DisplayName("ID 로 단일 스터디 리소스 조회")
     void ID_로_단일_스터디_리소스_조회() {
         //given 영속된 스터디가 주어졌을 때
@@ -62,7 +87,7 @@ class StudyServiceTest extends BaseMockTest {
         when(leader.getId()).thenReturn(1L);
 
         long studyId = 2L;
-        Study study = spy(Study.builder().leader(leader).build());
+        Study study = spy(Study.builder().leader(leader).maxParticipant(3).build());
         when(study.getId()).thenReturn(studyId);
 
         when(studyRepository.findById(studyId)).thenReturn(of(study));
@@ -83,7 +108,7 @@ class StudyServiceTest extends BaseMockTest {
         when(leader.getId()).thenReturn(1L);
 
         long studyId = 2L;
-        Study study = spy(Study.builder().leader(leader).build());
+        Study study = spy(Study.builder().leader(leader).maxParticipant(3).build());
         when(study.getId()).thenReturn(studyId);
 
         when(studyRepository.findById(studyId)).thenReturn(of(study));
@@ -115,11 +140,11 @@ class StudyServiceTest extends BaseMockTest {
         User leader = spy(User.builder().nickname("nickname").build());
         when(leader.getId()).thenReturn(1L);
 
-        Study study1 = spy(Study.builder().leader(leader).description("desc1").build());
+        Study study1 = spy(Study.builder().leader(leader).description("desc1").maxParticipant(1).build());
         when(study1.getId()).thenReturn(1L);
-        Study study2 = spy(Study.builder().leader(leader).description("desc2").build());
+        Study study2 = spy(Study.builder().leader(leader).description("desc2").maxParticipant(2).build());
         when(study2.getId()).thenReturn(2L);
-        Study study3 = spy(Study.builder().leader(leader).description("desc3").build());
+        Study study3 = spy(Study.builder().leader(leader).description("desc3").maxParticipant(3).build());
         when(study3.getId()).thenReturn(3L);
         List<Study> mockedList = List.of(study1, study2, study3);
         when(studyRepository.findAll()).thenReturn(mockedList);
@@ -139,7 +164,7 @@ class StudyServiceTest extends BaseMockTest {
         User leader = mock(User.class);
 
         long studyId = 1L;
-        Study study = spy(Study.builder().leader(leader).build());
+        Study study = spy(Study.builder().leader(leader).maxParticipant(3).build());
         when(study.getId()).thenReturn(studyId);
         when(studyRepository.findById(studyId)).thenReturn(of(study));
 
@@ -162,7 +187,7 @@ class StudyServiceTest extends BaseMockTest {
         User user = mock(User.class);
 
         long studyId = 1L;
-        Study study = spy(Study.builder().leader(mock(User.class)).build());
+        Study study = spy(Study.builder().leader(mock(User.class)).maxParticipant(3).build());
         when(study.getId()).thenReturn(studyId);
         when(studyRepository.findById(studyId)).thenReturn(of(study));
 
@@ -181,7 +206,7 @@ class StudyServiceTest extends BaseMockTest {
         User leader = mock(User.class);
 
         long studyId = 2L;
-        Study toDelete = spy(Study.builder().leader(leader).build());
+        Study toDelete = spy(Study.builder().leader(leader).maxParticipant(3).build());
         when(toDelete.getId()).thenReturn(studyId);
         when(studyRepository.findById(studyId)).thenReturn(of(toDelete));
 
@@ -200,7 +225,7 @@ class StudyServiceTest extends BaseMockTest {
         User user = mock(User.class);
 
         long studyId = 2L;
-        Study toDelete = spy(Study.builder().leader(mock(User.class)).build());
+        Study toDelete = spy(Study.builder().leader(mock(User.class)).maxParticipant(3).build());
         when(toDelete.getId()).thenReturn(studyId);
         when(studyRepository.findById(studyId)).thenReturn(of(toDelete));
 

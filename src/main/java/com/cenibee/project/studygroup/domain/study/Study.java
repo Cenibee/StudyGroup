@@ -6,7 +6,10 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,6 +36,12 @@ public class Study extends BaseEntity {
 
     @Builder
     public Study(User leader, int maxParticipant, String description) {
+        if (leader == null) {
+            throw new IllegalArgumentException("스터디 리더가 null 입니다.");
+        } else if (maxParticipant <= 0) {
+            throw new IllegalArgumentException("인원 제한은 양수 값이어야 합니다.");
+        }
+
         this.leader = leader;
         this.participants.add(Participate.of(leader, this));
         this.maxParticipant = maxParticipant;
@@ -62,7 +71,7 @@ public class Study extends BaseEntity {
     }
 
     /**
-     * user 의 변경 가능한 정보를 업데이트 합니다. null 로 입력된 속성은 변경되지 않습니다.<p/>
+     * 변경 가능한 정보를 업데이트 합니다. null 로 입력된 속성은 변경되지 않습니다.<p/>
      * newMaxParticipant 속성은 양수만 허용하며, 음수거나 현재 속한 인원보다 작은 값인 경우
      * {@link IllegalArgumentException} 예외가 발생합니다.
      * @param newMaxParticipant 변경할 스터디원 제한 인원
