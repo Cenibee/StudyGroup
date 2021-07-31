@@ -47,4 +47,20 @@ public interface StudyDto {
 
     }
 
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Getter
+    class ToUpdate {
+        private long studyId;
+        private int maxParticipant;
+        private String description;
+
+        public void update(Study study) {
+            if (this.studyId == study.getId()) {
+                study.update(this.maxParticipant, this.description);
+            } else {
+                throw new IllegalArgumentException("id 불일치로 스터디 정보를 업데이트 할 수 없습니다.");
+            }
+        }
+    }
 }

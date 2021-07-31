@@ -3,6 +3,8 @@ package com.cenibee.project.studygroup.domain.study;
 import com.cenibee.project.studygroup.domain.user.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -65,6 +67,89 @@ public class StudyTest {
 
         //then 참가되어 있지 않음
         assertThat(result).isFalse();
+    }
+
+    @Test
+    @DisplayName("스터디 정보 업데이트")
+    void 스터디_정보_업데이트() {
+        //given 스터디와 업데이트할 최대 인원, 설명이 주어졌을 때
+        Study study = Study.builder()
+                .leader(mock(User.class))
+                .maxParticipant(3)
+                .description("desc")
+                .build();
+
+        int newMaxParticipant = 5;
+        String newDescription = "new desc";
+
+        //when 스터디를 업데이트하면
+        study.update(newMaxParticipant, newDescription);
+
+        //then 주어진 업데이트 속성이 설정됨
+        assertThat(study.getMaxParticipant()).isEqualTo(newMaxParticipant);
+        assertThat(study.getDescription()).isEqualTo(newDescription);
+    }
+
+    @Test
+    @DisplayName("스터디 정보 업데이트 - 속성이 null")
+    void 스터디_정보_업데이트__속성이_null() {
+        //given 스터디가 주어졌을 때
+        int maxParticipant = 3;
+        String description = "desc";
+        Study study = Study.builder()
+                .leader(mock(User.class))
+                .maxParticipant(maxParticipant)
+                .description(description)
+                .build();
+
+        //when 스터디를 null 로 업데이트하면
+        study.update(null, null);
+
+        //then 원래 속성에서 변경되지 않음
+        assertThat(study.getMaxParticipant()).isEqualTo(maxParticipant);
+        assertThat(study.getDescription()).isEqualTo(description);
+    }
+
+    @ParameterizedTest(name = "인원 제한: {0}")
+    @CsvSource({ "0", "-1", "-100" })
+    @DisplayName("스터디 정보 업데이트 - 무효한 인원 제한")
+    void 스터디_정보_업데이트__무효한_인원_제한(int newMaxParticipant) {
+        //given 스터디와 업데이트할 최대 인원, 설명이 주어졌을 때
+        Study study = Study.builder()
+                .leader(mock(User.class))
+                .maxParticipant(3)
+                .description("desc")
+                .build();
+
+        String newDescription = "new desc";
+
+        //expect
+        assertThatThrownBy(() -> study.update(newMaxParticipant, newDescription))
+                .isExactlyInstanceOf(IllegalArgumentException.class)
+                .hasMessage("인원 제한은 양수 값이어야 합니다.");
+    }
+
+    @Test
+    @DisplayName("스터디 정보 업데이트 - 현재 인원보다 적은 인원 제한")
+    void 스터디_정보_업데이트__현재_인원보다_적은_인원_제한() {
+        //given 스터디와 업데이트할 최대 인원, 설명이 주어졌을 때
+        Study study = Study.builder()
+                .leader(mock(User.class))
+                .maxParticipant(5)
+                .description("desc")
+                .build();
+        study.join(mock(User.class));
+        study.join(mock(User.class));
+        study.join(mock(User.class));
+        study.join(mock(User.class));
+
+        int newMaxParticipant = 3;
+        String newDescription = "new desc";
+
+        //expect
+        assertThatThrownBy(() -> study.update(newMaxParticipant, newDescription))
+                .isExactlyInstanceOf(IllegalArgumentException.class)
+                .hasMessage("현재 스터디원 보다 적은 인원 제한은 설정할 수 없습니다.");
     }
 
     @Test

@@ -10,6 +10,7 @@ import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.util.Optional.ofNullable;
 import static javax.persistence.CascadeType.PERSIST;
 import static javax.persistence.FetchType.LAZY;
 import static lombok.AccessLevel.PROTECTED;
@@ -58,6 +59,27 @@ public class Study extends BaseEntity {
         if (leader.equals(user)) return true;
         return participants.stream()
                 .anyMatch(p -> p.getParticipant().equals(user));
+    }
+
+    /**
+     * user 의 변경 가능한 정보를 업데이트 합니다. null 로 입력된 속성은 변경되지 않습니다.<p/>
+     * newMaxParticipant 속성은 양수만 허용하며, 음수거나 현재 속한 인원보다 작은 값인 경우
+     * {@link IllegalArgumentException} 예외가 발생합니다.
+     * @param newMaxParticipant 변경할 스터디원 제한 인원
+     * @param newDescription 변경할 스터디 설명
+     * @exception IllegalArgumentException 유효하지 않은 속성이 포함되어 있는 경우 발생하며,
+     * 해당 예외가 발생한 경우 모든 속성이 업데이트되지 않습니다.
+     */
+    public void update(Integer newMaxParticipant, String newDescription) {
+        if (newMaxParticipant != null && newMaxParticipant <= 0) {
+            throw new IllegalArgumentException("인원 제한은 양수 값이어야 합니다.");
+        } else if (newMaxParticipant != null && newMaxParticipant < getNumOfParticipants()) {
+            throw new IllegalArgumentException("현재 스터디원 보다 적은 인원 제한은 설정할 수 없습니다.");
+        }
+        ofNullable(newMaxParticipant).ifPresent(maxParticipant ->
+                this.maxParticipant = maxParticipant);
+        ofNullable(newDescription).ifPresent(description ->
+                this.description = description);
     }
 
     /**

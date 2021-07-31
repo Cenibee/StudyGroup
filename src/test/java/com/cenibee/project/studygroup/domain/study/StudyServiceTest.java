@@ -49,8 +49,8 @@ class StudyServiceTest extends BaseMockTest {
     }
 
     @Test
-    @DisplayName("ID 로 단일 스터디 조회")
-    void ID_로_단일_스터디_조회() {
+    @DisplayName("ID 로 단일 스터디 리소스 조회")
+    void ID_로_단일_스터디_리소스_조회() {
         //given 영속된 스터디가 주어졌을 때
         User leader = spy(User.builder().nickname("nickname").build());
         when(leader.getId()).thenReturn(1L);
@@ -61,7 +61,7 @@ class StudyServiceTest extends BaseMockTest {
 
         when(studyRepository.findById(studyId)).thenReturn(of(study));
 
-        //when 영속 식별값으로 스터디를 조회하면
+        //when 영속 식별값으로 스터디 리소스를 조회하면
         StudyDto.Resource result = studyService.get(studyId);
 
         //then 주어진 스터디로 변환된 Resource DTO 가 반환됨
@@ -69,14 +69,34 @@ class StudyServiceTest extends BaseMockTest {
     }
 
     @Test
-    @DisplayName("ID 로 단일 스터디 조회 - 조회 결과 없음")
+    @DisplayName("ID 로 단일 스터디 엔티티 조회")
+    void ID_로_단일_스터디_엔티티_조회() {
+        //given 영속된 스터디가 주어졌을 때
+        User leader = spy(User.builder().nickname("nickname").build());
+        when(leader.getId()).thenReturn(1L);
+
+        long studyId = 2L;
+        Study study = spy(Study.builder().leader(leader).build());
+        when(study.getId()).thenReturn(studyId);
+
+        when(studyRepository.findById(studyId)).thenReturn(of(study));
+
+        //when 영속 식별값으로 스터디 엔티티를 조회하면
+        Study result = studyService.findById(studyId);
+
+        //then 스터디가 반환됨
+        assertThat(result).isEqualTo(study);
+    }
+
+    @Test
+    @DisplayName("ID 로 단일 스터디 엔티티 조회 - 조회 결과 없음")
     void ID_로_단일_스터디_조회__조회_결과_없음() {
         //given 유효하지 않은 식별값이 주어졌을 때
         long studyId = 1L;
         when(studyRepository.findById(studyId)).thenReturn(empty());
 
-        //expect 주어진 식별값으로 스터디를 조회하면 NoSuchElementException 예외가 발생
-        assertThatThrownBy(() -> studyService.get(studyId))
+        //expect 주어진 식별값으로 스터디 엔티티를 조회하면 NoSuchElementException 예외가 발생
+        assertThatThrownBy(() -> studyService.findById(studyId))
                 .isExactlyInstanceOf(NoSuchElementException.class)
                 .hasMessageContaining("해당 스터디를 찾을 수 없습니다.");
     }
@@ -103,6 +123,47 @@ class StudyServiceTest extends BaseMockTest {
         //then 각 스터디가 Resource DTO 형태로 변환되어 반환됨
         assertThat(result).isEqualTo(
                 mockedList.stream().map(StudyDto.Resource::from).collect(Collectors.toList()));
+    }
+
+    @Test
+    @DisplayName("스터디 정보 수정")
+    void 스터디_정보_수정() {
+        //given 스터디와 리더 유저, 주어진 스터디를 업데이트하는 DTO 가 주어졌을 때
+        User leader = mock(User.class);
+
+        long studyId = 1L;
+        Study study = spy(Study.builder().leader(leader).build());
+        when(study.getId()).thenReturn(studyId);
+        when(studyRepository.findById(studyId)).thenReturn(of(study));
+
+        int maxParticipant = 5;
+        String description = "new desc";
+        StudyDto.ToUpdate dto = spy(new StudyDto.ToUpdate(studyId, maxParticipant, description));
+
+        //when 리더로 스터디를 업데이트하면
+        studyService.updateBy(leader, dto);
+
+        //then DTO 의 업데이트 함수를 콜한다.
+        verify(dto).update(study);
+    }
+
+    @Test
+    @DisplayName("스터디 정보 수정 - 스터디 리더가 아닌 경우")
+    void 스터디_정보_수정__스터디_리더가_아닌_경우() {
+        //given 스터디와 리더가 아닌 유저, 주어진 스터디를 업데이트하는 DTO 가 주어졌을 때
+        User user = mock(User.class);
+
+        long studyId = 1L;
+        Study study = spy(Study.builder().leader(mock(User.class)).build());
+        when(study.getId()).thenReturn(studyId);
+        when(studyRepository.findById(studyId)).thenReturn(of(study));
+
+        StudyDto.ToUpdate dto = spy(new StudyDto.ToUpdate(studyId, 3, "desc"));
+
+        //expect 리더가 아닌 유저로 스터디를 업데이트하면 IllegalStateException 예외가 발생함
+        assertThatThrownBy(() -> studyService.updateBy(user, dto))
+                .isExactlyInstanceOf(IllegalStateException.class)
+                .hasMessage("스터디 관리 권한이 없습니다.");
     }
 
 }

@@ -23,8 +23,13 @@ public class StudyService {
 
     @Transactional(readOnly = true)
     public StudyDto.Resource get(long studyId) {
-        return StudyDto.Resource.from(studyRepository.findById(studyId).orElseThrow(() ->
-                new NoSuchElementException("해당 스터디를 찾을 수 없습니다.(id:" + studyId + ")")));
+        return StudyDto.Resource.from(findById(studyId));
+    }
+
+    @Transactional(readOnly = true)
+    public Study findById(long studyId) {
+        return studyRepository.findById(studyId).orElseThrow(() ->
+                new NoSuchElementException("해당 스터디를 찾을 수 없습니다.(id:" + studyId + ")"));
     }
 
     @Transactional(readOnly = true)
@@ -34,4 +39,11 @@ public class StudyService {
                 .collect(Collectors.toList());
     }
 
+    public void updateBy(User leader, StudyDto.ToUpdate dto) {
+        Study study = findById(dto.getStudyId());
+        if (leader == null || !leader.equals(study.getLeader())) {
+            throw new IllegalStateException("스터디 관리 권한이 없습니다.");
+        }
+        dto.update(study);
+    }
 }

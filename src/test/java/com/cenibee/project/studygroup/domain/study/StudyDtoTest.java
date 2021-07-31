@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 @DisplayName("StudyDTO 유닛테스트")
@@ -62,6 +63,47 @@ class StudyDtoTest {
             assertThat(result.getNumOfParticipant()).isEqualTo(study.getNumOfParticipants());
             assertThat(result.getMaxParticipant()).isEqualTo(study.getMaxParticipant());
             assertThat(result.getDescription()).isEqualTo(study.getDescription());
+        }
+    }
+
+    @Nested
+    @DisplayName("Study 업데이트 DTO 유닛 테스트")
+    class ToUpdateTest {
+        @Test
+        @DisplayName("엔티티 업데이트 테스트")
+        void 엔티티_업데이트_테스트() {
+            //given ID 가 일치하는 스터디와 업데이트 DTO 가 주어졌을 때
+            long studyId = 1L;
+            Study study = mock(Study.class);
+            when(study.getId()).thenReturn(studyId);
+
+            int maxParticipant = 3;
+            String description = "desc";
+            StudyDto.ToUpdate dto = new StudyDto.ToUpdate(studyId, maxParticipant, description);
+
+            //when DTO 로 스터디를 업데이트하면
+            dto.update(study);
+
+            //then DTO 의 속성 값으로 스터디의 update() 함수가 실행됨
+            verify(study).update(maxParticipant, description);
+        }
+
+        @Test
+        @DisplayName("엔티티 업데이트 테스트 - ID 가 일치하지 않는 경우")
+        void 엔티티_업데이트_테스트__ID_가_일치하지_않는_경우() {
+            //given ID 가 일치하지 않는 스터디와 업데이트 DTO 가 주어졌을 때
+            long studyId = 1L;
+            Study study = mock(Study.class);
+            when(study.getId()).thenReturn(studyId);
+
+            int maxParticipant = 3;
+            String description = "desc";
+            StudyDto.ToUpdate dto = new StudyDto.ToUpdate(2L, maxParticipant, description);
+
+            //when DTO 로 스터디를 업데이트하면 IllegalArgumentException 예외가 발생한다.
+            assertThatThrownBy(() -> dto.update(study))
+                    .isExactlyInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("id 불일치로 스터디 정보를 업데이트 할 수 없습니다.");
         }
     }
 
