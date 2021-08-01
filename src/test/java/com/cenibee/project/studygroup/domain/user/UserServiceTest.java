@@ -1,7 +1,6 @@
 package com.cenibee.project.studygroup.domain.user;
 
 import com.cenibee.project.studygroup.BaseMockTest;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
